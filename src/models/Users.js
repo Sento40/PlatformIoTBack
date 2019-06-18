@@ -43,15 +43,15 @@ const UsersSchema = new Schema({
      },
      devices:[{
          type: Schema.Types.ObjectId,
-         ref: Devices
+         ref: "Devices"
      }],
      dataBuckets:[{
          type:Schema.Types.ObjectId,
-         ref: Buckets
+         ref: "Buckets"
      }],
      dashboards:[{
          type: Schema.Types.ObjectId,
-         ref: Dashboards
+         ref: "Dashboards"
      }],
      is_active:{
         type: Boolean,
@@ -59,4 +59,26 @@ const UsersSchema = new Schema({
      }
 }, { 'collection': 'Users', 'timestamps':true });
 
-export default mongoose.model('Users', UsersSchema);
+UsersSchema.pre('save', function (next) {
+    let user = this
+
+    if (!user.isModified('password')) { return next(); }
+
+    // De lo contrario, encriptamos el password del usuarioy lo seteamos al documento (user) que se guardará
+    bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
+        if (err) return next(err)
+        bcrypt.hash(user.password, salt, async function (err, hash) {
+            if (err) return next(err);
+            user.password = hash;
+            next();
+        })
+    })
+});
+
+UsersSchema.methods.comparePassword = function (candidate, cb) {
+    console.log(this.password)
+    bcrypt.compare(candidate, this.password, function (err, isMatch) {
+        cb(err, isMatch)
+    })
+}
+module.exports = mongoose.model('Users', UsersSchema);

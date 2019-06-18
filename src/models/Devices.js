@@ -18,7 +18,7 @@ const DeviceSchema = new Schema({
         default: new Date()
     },
     messages:[{
-        string
+       type: String
     }]
 
 },{'collection':'Devices', 'timestamps':true});
